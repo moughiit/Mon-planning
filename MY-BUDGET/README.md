@@ -16,13 +16,18 @@ Stack : Expo SDK 58 · Expo Router · TypeScript · Supabase (PostgreSQL + Auth)
 - Réglages : thème, déconnexion, accès aux écrans secondaires.
 - Revenus et Dépenses : total du mois, répartition par catégorie, ajout, suppression.
 - Dettes : création, progression (capital et intérêts calculés à partir des paiements), remboursement avec découpage capital / intérêts, archivage. Une dette est marquée « Soldée » quand le restant dû atteint 0.
+- Épargne : objectifs avec montant cible, échéance et compte lié ; mensualité estimée ; archivage.
+- Budgets : plafond mensuel par catégorie de dépense, comparé au dépensé, alerte au dépassement.
+- Calendrier quotidien : grille mensuelle (semaines du lundi), net par jour, détail des opérations du jour.
+- Rapports : bilan annuel (revenus, dépenses, solde net, taux d'épargne, dettes), graphique et tableau mois par mois.
 
-**Pas encore fait** (écrans placeholders « Bientôt disponible »)
-- Écrans Épargne, Budgets, Calendrier quotidien, Rapports.
-- Modification d'une dette ou d'une opération (seule la suppression d'opération existe).
+**Pas encore fait**
+- Modification d'une dette, d'une opération ou d'un objectif (seule la suppression d'opération existe).
 - Suppression d'une dette (volontairement non proposée : les paiements la référencent ; on archive).
-- Modification d'une opération (seule la suppression existe).
-- Clôture mensuelle (`monthly_snapshots`) et exports PDF / Excel.
+- Clôture mensuelle (`monthly_snapshots`) et exports PDF / Excel des rapports.
+- Notifications (Expo Notifications) et mode hors-ligne.
+- Icône et splash screen (dossier `assets/` vide).
+- Les statuts « atteint » (objectif d'épargne) ne sont calculés que dans l'interface, pas écrits en base.
 - Notifications (Expo Notifications) et mode hors-ligne.
 - Icône et splash screen (dossier `assets/` vide).
 
