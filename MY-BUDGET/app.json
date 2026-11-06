@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "MY BUDGET",
+    "slug": "my-budget",
+    "scheme": "mybudget",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "fr.example.mybudget"
+    },
+    "android": {
+      "package": "fr.example.mybudget"
+    },
+    "plugins": ["expo-router"]
+  }
+}
