@@ -1,0 +1,41 @@
+# Publie uniquement le dossier budget/ sur GitHub Pages (le reste du dépôt n'est pas publié).
+# Prérequis une seule fois : Settings → Pages → Build and deployment → Source : « GitHub Actions ».
+name: Publier My Budget sur GitHub Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/awesome-davinci-hz5if2
+    paths:
+      - 'budget/**'
+      - '.github/workflows/pages-budget.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-budget
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: budget
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

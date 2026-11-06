@@ -100,6 +100,15 @@
   .tr.t { font-weight: 700; background: var(--bg); }
   .tr > span:not(:first-child) { text-align: right; }
 
+  /* CALENDRIER */
+  .cal-card { background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 10px; }
+  .cal-head, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal-head span { text-align: center; font-size: 11px; font-weight: 700; color: var(--text2); padding: 4px 0; }
+  .cal-cell { border: none; background: none; height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; border-radius: 10px; font-size: 13px; color: var(--dark); }
+  .cal-cell.sel { background: var(--dark); color: #fff; }
+  .cal-cell.today { font-weight: 700; text-decoration: underline; }
+  .cal-dot { width: 6px; height: 6px; border-radius: 50%; display: block; }
+
   /* MODAL */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: flex-end; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
@@ -152,9 +161,9 @@
 const KEY = 'mybudget_v1';
 const TYPE_LABEL = { income: 'Revenu', expense: 'Dépense', transfer: 'Virement', debt_payment: 'Remboursement' };
 const ACC_TYPE = { checking: 'Compte courant', savings: 'Épargne', cash: 'Espèces', other: 'Autre' };
-const VIEW_TITLES = { home: 'Accueil', ops: 'Opérations', accounts: 'Comptes', debts: 'Dettes', more: 'Plus', goals: 'Épargne', budgets: 'Budgets', reports: 'Rapports', settings: 'Réglages' };
+const VIEW_TITLES = { home: 'Accueil', ops: 'Opérations', accounts: 'Comptes', debts: 'Dettes', more: 'Plus', goals: 'Épargne', budgets: 'Budgets', calendar: 'Calendrier', reports: 'Rapports', settings: 'Réglages' };
 const NAV = [['home', 'Accueil', '🏠'], ['ops', 'Opérations', '⇄'], ['accounts', 'Comptes', '🏦'], ['debts', 'Dettes', '💳'], ['more', 'Plus', '☰']];
-const SUB = { goals: 'more', budgets: 'more', reports: 'more', settings: 'more' };
+const SUB = { goals: 'more', budgets: 'more', calendar: 'more', reports: 'more', settings: 'more' };
 const MONTH_SHORT = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 const DEFAULT_CATS = [
   { id: 'c1', name: 'Salaire', kind: 'income', color: '#4CAF50' },
@@ -213,7 +222,7 @@ function persist() {
 
 // ── État d'affichage ──
 const now = new Date();
-const state = { view: 'home', ym: ymOf(now), opsFilter: 'all', year: now.getFullYear() };
+const state = { view: 'home', ym: ymOf(now), opsFilter: 'all', year: now.getFullYear(), calDay: null };
 let txType = 'expense';
 let editingTx = null;
 
@@ -295,7 +304,7 @@ function render() {
 // ── Vues ──
 const VIEWS = {
   home: viewHome, ops: viewOps, accounts: viewAccounts, debts: viewDebts, more: viewMore,
-  goals: viewGoals, budgets: viewBudgets, reports: viewReports, settings: viewSettings,
+  goals: viewGoals, budgets: viewBudgets, calendar: viewCalendar, reports: viewReports, settings: viewSettings,
 };
 
 function kpi(label, value, color) {
@@ -400,6 +409,7 @@ function viewMore() {
   const items = [
     ['goals', '🎯', 'Épargne', 'Objectifs et progression'],
     ['budgets', '📊', 'Budgets', 'Plafonds par catégorie'],
+    ['calendar', '📅', 'Calendrier', 'Vue quotidienne du mois'],
     ['reports', '📈', 'Rapports', 'Bilan mensuel et annuel'],
     ['settings', '⚙️', 'Réglages', 'Catégories, sauvegarde, données'],
   ];
@@ -516,6 +526,54 @@ function viewSettings() {
     <button class="menu-item" onclick="resetData()"><span class="menu-ico">🗑️</span><span style="flex:1;color:#B91C1C"><b>Tout effacer</b><div class="muted">Irréversible</div></span></button>`;
 }
 
+// ── Calendrier quotidien ──
+// Grille du mois, semaines commençant le lundi ; les cases hors mois sont null.
+function monthGrid(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  const first = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+  const days = new Date(y, m, 0).getDate();
+  const cells = Array(first).fill(null);
+  for (let d = 1; d <= days; d++) cells.push(`${y}-${pad(m)}-${pad(d)}`);
+  while (cells.length % 7) cells.push(null);
+  return cells;
+}
+function dayTotals(iso) {
+  let income = 0, outflow = 0, count = 0;
+  for (const t of db.tx) {
+    if (t.date !== iso) continue;
+    count++;
+    if (t.type === 'income') income += t.amount;
+    else if (t.type === 'expense' || t.type === 'debt_payment') outflow += t.amount;
+  }
+  return { income: r2(income), outflow: r2(outflow), count };
+}
+// Jour affiché : celui choisi s'il est dans le mois affiché, sinon aujourd'hui (si on est dans ce mois) ou le 1er.
+function selectedDay() {
+  if (state.calDay && state.calDay.startsWith(state.ym)) return state.calDay;
+  const today = isoOf(new Date());
+  return today.startsWith(state.ym) ? today : `${state.ym}-01`;
+}
+function setCalDay(iso) { state.calDay = iso; render(); }
+function viewCalendar() {
+  const sel = selectedDay();
+  const todayIso = isoOf(new Date());
+  const head = ['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(d => `<span>${d}</span>`).join('');
+  const grid = monthGrid(state.ym).map(iso => {
+    if (!iso) return '<div class="cal-cell"></div>';
+    const t = dayTotals(iso);
+    const dot = t.count ? `<i class="cal-dot" style="background:${t.income - t.outflow >= 0 ? 'var(--income)' : 'var(--expense)'}"></i>` : '';
+    return `<button class="cal-cell ${iso === sel ? 'sel' : ''} ${iso === todayIso ? 'today' : ''}" onclick="setCalDay('${iso}')"><span>${Number(iso.slice(8))}</span>${dot}</button>`;
+  }).join('');
+  const tt = dayTotals(sel);
+  const list = db.tx.filter(t => t.date === sel);
+  return `<div class="cal-card"><div class="cal-head">${head}</div><div class="cal-grid">${grid}</div></div>
+    <div class="section-title">${dayLabel(sel)}</div>
+    <div class="kpi-grid" style="margin-bottom:10px">${kpi('Revenus', tt.income, 'var(--income)')}${kpi('Sorties', tt.outflow, 'var(--expense)')}</div>
+    <button class="add-btn" onclick="openTxForm(null,'${sel}')">+ Opération ce jour</button>
+    ${list.length ? list.map(txRow).join('') : empty('Rien ce jour-là', 'Touche « + Opération ce jour » pour en ajouter une')}
+    <div class="muted" style="margin-top:10px">Point vert : jour positif ; point rouge : sorties supérieures aux revenus. Sorties = dépenses + remboursements de dettes.</div>`;
+}
+
 // ── Modale ──
 function openModal(title, html) {
   $('mTitle').textContent = title;
@@ -525,7 +583,7 @@ function openModal(title, html) {
 function closeModal() { $('mOverlay').classList.remove('open'); }
 
 // Opération (revenu, dépense, virement)
-function openTxForm(id) {
+function openTxForm(id, presetDate) {
   const t = id ? db.tx.find(x => x.id === id) : null;
   editingTx = t ? t.id : null;
   txType = t ? t.type : 'expense';
@@ -533,7 +591,7 @@ function openTxForm(id) {
     <div class="seg">${['expense', 'income', 'transfer'].map(x => `<button type="button" class="seg-btn" data-type="${x}" onclick="setTxType('${x}')">${TYPE_LABEL[x]}</button>`).join('')}</div>
     <div class="field"><label>Montant (€)</label><input id="fAmount" inputmode="decimal" placeholder="0,00" value="${t ? String(t.amount).replace('.', ',') : ''}"></div>
     <div class="field"><label>Description</label><input id="fDesc" placeholder="Ex. Courses" value="${esc(t ? t.description : '')}"></div>
-    <div class="field"><label>Date</label><input id="fDate" type="date" value="${t ? t.date : isoOf(new Date())}"></div>
+    <div class="field"><label>Date</label><input id="fDate" type="date" value="${t ? t.date : (presetDate || isoOf(new Date()))}"></div>
     <div class="field" id="wCat"><label>Catégorie</label><select id="fCat"></select></div>
     <div class="field"><label id="lblSrc">Compte</label><select id="fSrc"></select></div>
     <div class="field" id="wDest" style="display:none"><label>Compte crédité</label><select id="fDest"></select></div>

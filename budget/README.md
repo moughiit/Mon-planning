@@ -5,7 +5,11 @@ Une seule page HTML, sans serveur ni compte : les données restent dans le navig
 ## Utilisation
 
 - Ouvre `index.html` dans un navigateur (Chrome, Safari, Firefox).
-- Sur téléphone, il faut une adresse web pour l'ouvrir (par exemple GitHub Pages) ; je n'ai pas testé cet hébergement.
+- Sur téléphone, il faut une adresse web. Un workflow est prêt : `.github/workflows/pages-budget.yml` publie uniquement le dossier `budget/`.
+  - Une fois : dans GitHub, **Settings → Pages → Build and deployment → Source : GitHub Actions**.
+  - Le workflow se déclenche à chaque modification de `budget/` sur la branche `claude/awesome-davinci-hz5if2` (ou manuellement, onglet Actions). Pour le publier depuis `main`, modifie la branche dans le fichier après fusion.
+  - Je n'ai pas pu activer Pages ni lancer le workflow depuis cette session : vérifie l'onglet Actions après le premier passage.
+  - L'adresse publique est ouvrable par n'importe qui. Les données restent cependant dans le navigateur de chacun.
 
 ## Points importants
 
@@ -23,4 +27,4 @@ Une seule page HTML, sans serveur ni compte : les données restent dans le navig
 - Rapports : bilan annuel, taux d'épargne, tableau mois par mois.
 - Catégories personnalisables, sauvegarde et import JSON.
 
-Pas de calendrier quotidien dans cette version.
+- Calendrier quotidien : grille du mois, net par jour, opérations du jour et ajout pré-rempli.
