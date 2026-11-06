@@ -1,5 +1,5 @@
-import { ComingSoon } from '@/components/ComingSoon';
+import { OperationsByType } from '@/components/OperationsByType';
 
 export default function IncomeScreen() {
-  return <ComingSoon title="Revenus" description="Écran prévu dans la maquette, pas encore implémenté." />;
+  return <OperationsByType type="income" />;
 }

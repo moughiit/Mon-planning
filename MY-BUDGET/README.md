@@ -14,9 +14,13 @@ Stack : Expo SDK 58 · Expo Router · TypeScript · Supabase (PostgreSQL + Auth)
 - Analyse : répartition des dépenses par catégorie (anneau).
 - Historique : 12 derniers mois (graphique + détail).
 - Réglages : thème, déconnexion, accès aux écrans secondaires.
+- Revenus et Dépenses : total du mois, répartition par catégorie, ajout, suppression.
+- Dettes : création, progression (capital et intérêts calculés à partir des paiements), remboursement avec découpage capital / intérêts, archivage. Une dette est marquée « Soldée » quand le restant dû atteint 0.
 
 **Pas encore fait** (écrans placeholders « Bientôt disponible »)
-- Écrans Revenus, Dépenses, Épargne, Dettes, Budgets, Calendrier quotidien, Rapports.
+- Écrans Épargne, Budgets, Calendrier quotidien, Rapports.
+- Modification d'une dette ou d'une opération (seule la suppression d'opération existe).
+- Suppression d'une dette (volontairement non proposée : les paiements la référencent ; on archive).
 - Modification d'une opération (seule la suppression existe).
 - Clôture mensuelle (`monthly_snapshots`) et exports PDF / Excel.
 - Notifications (Expo Notifications) et mode hors-ligne.
@@ -71,6 +75,7 @@ Lance PostgreSQL en mémoire (PGlite) avec un shim minimal de Supabase (`auth.us
 - **Confirmation par email** : si elle est activée dans Supabase, l'inscription ne connecte pas immédiatement l'utilisateur (l'écran l'indique).
 - **Identifiant d'application** : `fr.example.mybudget` dans `app.json` est un placeholder à remplacer avant toute publication.
 - **Versions** : les versions Expo ont été alignées sur `node_modules/expo/bundledNativeModules.json` (SDK 58). NativeWind 4 nécessite Tailwind 3.x : la version 5 était encore en release candidate au moment de l'écriture. À revérifier si tu mets à jour.
+- **Dettes** : le statut « soldée » est écrit par l'app après l'insertion du paiement, en deux requêtes. Un échec entre les deux laisse le paiement enregistré sans statut mis à jour (l'app l'indique). Un trigger SQL réglerait ce cas si besoin.
 - **Export Excel** : le paquet `xlsx` publié sur npm est ancien et porte des failles connues ; il n'est pas utilisé. Une alternative (ex. `exceljs`) reste à choisir quand l'export sera implémenté.
 
 ## Structure

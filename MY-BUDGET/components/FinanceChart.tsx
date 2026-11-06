@@ -40,7 +40,7 @@ export function IncomeExpenseBars({ points }: { points: HistoryPoint[] }) {
 }
 
 /** Répartition des dépenses par catégorie (anneau). */
-export function CategoryDonut({ slices }: { slices: CategorySlice[] }) {
+export function CategoryDonut({ slices, label = 'Dépenses' }: { slices: CategorySlice[]; label?: string }) {
   const total = slices.reduce((sum, s) => sum + s.value, 0);
   const data = slices.map((s, i) => ({
     value: s.value,
@@ -58,7 +58,7 @@ export function CategoryDonut({ slices }: { slices: CategorySlice[] }) {
         innerCircleColor="transparent"
         centerLabelComponent={() => (
           <View className="items-center">
-            <Text className="text-xs text-stone-500">Dépenses</Text>
+            <Text className="text-xs text-stone-500">{label}</Text>
             <Text className="text-sm font-bold text-stone-900 dark:text-stone-50">{formatMoney(total)}</Text>
           </View>
         )}

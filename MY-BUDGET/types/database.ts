@@ -85,6 +85,38 @@ export interface NewTransactionInput {
   notes?: string | null;
 }
 
+export type DebtStatus = 'active' | 'repaid' | 'archived';
+
+export interface Debt {
+  id: string;
+  user_id: string;
+  name: string;
+  creditor: string | null;
+  initial_amount: number;
+  interest_rate: number;
+  start_date: string;
+  due_date: string | null;
+  status: DebtStatus;
+}
+
+/** Dette avec progression calculée à partir des paiements (services/debts.ts). */
+export interface DebtWithProgress extends Debt {
+  principal_paid: number;
+  interest_paid: number;
+  remaining: number;
+  payments_count: number;
+  last_payment_date: string | null;
+}
+
+export interface NewDebtInput {
+  name: string;
+  creditor: string | null;
+  initial_amount: number;
+  interest_rate: number;
+  start_date: string;
+  due_date: string | null;
+}
+
 export interface NewAccountInput {
   name: string;
   type: AccountType;

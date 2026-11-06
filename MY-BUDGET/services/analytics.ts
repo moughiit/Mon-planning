@@ -24,12 +24,15 @@ export interface CategorySlice {
   color: string | null;
 }
 
-/** Dépenses regroupées par catégorie (calcul local sur les opérations déjà chargées). */
-export function expenseBreakdown(transactions: TransactionWithRelations[]): CategorySlice[] {
+/** Montants d'un type d'opération regroupés par catégorie (calcul local sur les opérations chargées). */
+export function categoryBreakdown(
+  transactions: TransactionWithRelations[],
+  type: 'income' | 'expense',
+): CategorySlice[] {
   const totals = new Map<string, CategorySlice>();
 
   for (const t of transactions) {
-    if (t.type !== 'expense') continue;
+    if (t.type !== type) continue;
     const name = t.category?.name ?? 'Sans catégorie';
     const current = totals.get(name) ?? { name, value: 0, color: t.category?.color ?? null };
     current.value += t.amount;

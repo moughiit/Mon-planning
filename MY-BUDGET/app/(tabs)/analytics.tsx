@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { CategoryDonut } from '@/components/FinanceChart';
 import { DateSelector } from '@/components/DateSelector';
 import { useTransactions } from '@/hooks/useTransactions';
-import { expenseBreakdown } from '@/services/analytics';
+import { categoryBreakdown } from '@/services/analytics';
 import { useAppStore } from '@/store/useAppStore';
 
 export default function AnalyticsScreen() {
@@ -11,7 +11,7 @@ export default function AnalyticsScreen() {
   const shift = useAppStore((s) => s.shiftSelectedMonth);
   const { data, isLoading, isError } = useTransactions(period);
 
-  const slices = useMemo(() => expenseBreakdown(data ?? []), [data]);
+  const slices = useMemo(() => categoryBreakdown(data ?? [], 'expense'), [data]);
 
   return (
     <ScrollView className="flex-1 bg-stone-100 dark:bg-zinc-950" contentContainerClassName="gap-4 p-4 pt-14">
