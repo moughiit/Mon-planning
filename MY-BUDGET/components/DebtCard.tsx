@@ -2,12 +2,7 @@ import { Pressable, Text, View } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import type { DebtWithProgress } from '@/types/database';
 import { formatMoney } from '@/utils/money';
-
-/** Date ISO (AAAA-MM-JJ) affichée au format français (JJ/MM/AAAA). */
-export function formatFrDate(iso: string): string {
-  const [y, m, d] = iso.split('-');
-  return `${d}/${m}/${y}`;
-}
+import { formatFrDate } from '@/utils/dates';
 
 interface Props {
   debt: DebtWithProgress;

@@ -117,6 +117,36 @@ export interface NewDebtInput {
   due_date: string | null;
 }
 
+export type SavingsStatus = 'active' | 'reached' | 'archived';
+
+export interface SavingsGoal {
+  id: string;
+  user_id: string;
+  name: string;
+  target_amount: number;
+  target_date: string | null;
+  account_id: string | null;
+  status: SavingsStatus;
+  account: { name: string } | null;
+}
+
+export interface NewSavingsGoalInput {
+  name: string;
+  target_amount: number;
+  target_date: string | null;
+  account_id: string | null;
+}
+
+/** Montant prévu d'une catégorie de dépenses pour un mois donné. */
+export interface Budget {
+  id: string;
+  user_id: string;
+  year: number;
+  month: number;
+  category_id: string | null;
+  amount: number;
+}
+
 export interface NewAccountInput {
   name: string;
   type: AccountType;

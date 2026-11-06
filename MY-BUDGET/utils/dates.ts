@@ -42,3 +42,14 @@ export function monthLabel({ year, month }: YearMonth): string {
 export function shortMonthLabel({ year, month }: YearMonth): string {
   return new Intl.DateTimeFormat('fr-FR', { month: 'short' }).format(new Date(year, month - 1, 1));
 }
+
+/** Date ISO (AAAA-MM-JJ) affichée au format français (JJ/MM/AAAA). */
+export function formatFrDate(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+export function yearMonthOf(iso: string): YearMonth {
+  const [y, m] = iso.split('-').map(Number);
+  return { year: y, month: m };
+}
