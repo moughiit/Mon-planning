@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createTransaction, deleteTransaction, listTransactionsForMonth } from '@/services/transactions';
+import { createTransaction, deleteTransaction, listTransactionsForMonth, updateTransaction } from '@/services/transactions';
 import type { NewTransactionInput } from '@/types/database';
 import type { YearMonth } from '@/utils/dates';
 
@@ -24,6 +24,14 @@ export function useCreateTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: NewTransactionInput) => createTransaction(input),
+    onSuccess: () => invalidateFinancialData(queryClient),
+  });
+}
+
+export function useUpdateTransaction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: NewTransactionInput }) => updateTransaction(id, input),
     onSuccess: () => invalidateFinancialData(queryClient),
   });
 }

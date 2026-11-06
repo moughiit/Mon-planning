@@ -4,6 +4,7 @@ import { CategoryDonut } from './FinanceChart';
 import { DateSelector } from './DateSelector';
 import { KPICard } from './KPICard';
 import { SubmitButton } from './FormParts';
+import { confirmTransactionAction } from './TransactionActions';
 import { TransactionCard } from './TransactionCard';
 import { TransactionForm } from './TransactionForm';
 import { COLORS } from '@/constants/theme';
@@ -19,24 +20,17 @@ export function OperationsByType({ type }: { type: 'income' | 'expense' }) {
   const { data, isLoading, isError, isFetching, refetch } = useTransactions(period);
   const remove = useDeleteTransaction();
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<TransactionWithRelations | null>(null);
 
   const isIncome = type === 'income';
   const items = useMemo(() => (data ?? []).filter((t) => t.type === type), [data, type]);
   const total = useMemo(() => items.reduce((sum, t) => sum + t.amount, 0), [items]);
   const slices = useMemo(() => categoryBreakdown(items, type), [items, type]);
+  const formOpen = showForm || editing !== null;
 
-  const confirmDelete = (t: TransactionWithRelations) => {
-    Alert.alert('Supprimer l’opération ?', `${t.description} — ${t.amount} €`, [
-      { text: 'Annuler', style: 'cancel' },
-      {
-        text: 'Supprimer',
-        style: 'destructive',
-        onPress: () =>
-          remove.mutate(t.id, {
-            onError: (e: Error) => Alert.alert('Suppression impossible', e.message),
-          }),
-      },
-    ]);
+  const closeForm = () => {
+    setShowForm(false);
+    setEditing(null);
   };
 
   if (isLoading) return <ActivityIndicator className="mt-8" />;
@@ -61,10 +55,17 @@ export function OperationsByType({ type }: { type: 'income' | 'expense' }) {
       />
 
       <SubmitButton
-        label={showForm ? 'Fermer' : isIncome ? '+ Ajouter un revenu' : '+ Ajouter une dépense'}
-        onPress={() => setShowForm((v) => !v)}
+        label={formOpen ? 'Fermer' : isIncome ? '+ Ajouter un revenu' : '+ Ajouter une dépense'}
+        onPress={() => (formOpen ? closeForm() : setShowForm(true))}
       />
-      {showForm ? <TransactionForm fixedType={type} onDone={() => setShowForm(false)} /> : null}
+      {formOpen ? (
+        <TransactionForm
+          key={editing?.id ?? 'new'}
+          fixedType={type}
+          editing={editing ?? undefined}
+          onDone={closeForm}
+        />
+      ) : null}
 
       {slices.length > 0 ? <CategoryDonut slices={slices} label={isIncome ? 'Revenus' : 'Dépenses'} /> : null}
 
@@ -73,7 +74,24 @@ export function OperationsByType({ type }: { type: 'income' | 'expense' }) {
         {items.length === 0 ? (
           <Text className="text-center text-stone-500">Aucune opération ce mois-ci.</Text>
         ) : (
-          items.map((t) => <TransactionCard key={t.id} transaction={t} onLongPress={() => confirmDelete(t)} />)
+          items.map((t) => (
+            <TransactionCard
+              key={t.id}
+              transaction={t}
+              onLongPress={() =>
+                confirmTransactionAction(t, {
+                  onEdit: () => {
+                    setShowForm(false);
+                    setEditing(t);
+                  },
+                  onDelete: () =>
+                    remove.mutate(t.id, {
+                      onError: (e: Error) => Alert.alert('Suppression impossible', e.message),
+                    }),
+                })
+              }
+            />
+          ))
         )}
       </View>
     </ScrollView>

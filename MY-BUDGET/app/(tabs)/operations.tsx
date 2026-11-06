@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { DateSelector } from '@/components/DateSelector';
+import { confirmTransactionAction } from '@/components/TransactionActions';
 import { TransactionCard } from '@/components/TransactionCard';
 import { TransactionForm } from '@/components/TransactionForm';
 import { useDeleteTransaction, useTransactions } from '@/hooks/useTransactions';
@@ -11,22 +12,15 @@ export default function OperationsScreen() {
   const period = useAppStore((s) => s.selectedMonth);
   const shift = useAppStore((s) => s.shiftSelectedMonth);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<TransactionWithRelations | null>(null);
 
   const { data, isLoading, isError, isFetching, refetch } = useTransactions(period);
   const remove = useDeleteTransaction();
 
-  const confirmDelete = (t: TransactionWithRelations) => {
-    Alert.alert('Supprimer l’opération ?', `${t.description} — ${t.amount} €`, [
-      { text: 'Annuler', style: 'cancel' },
-      {
-        text: 'Supprimer',
-        style: 'destructive',
-        onPress: () =>
-          remove.mutate(t.id, {
-            onError: (e: Error) => Alert.alert('Suppression impossible', e.message),
-          }),
-      },
-    ]);
+  const formOpen = showForm || editing !== null;
+  const closeForm = () => {
+    setShowForm(false);
+    setEditing(null);
   };
 
   return (
@@ -34,18 +28,18 @@ export default function OperationsScreen() {
       <View className="flex-row items-center justify-between">
         <Text className="text-2xl font-bold text-stone-900 dark:text-stone-50">Opérations</Text>
         <Pressable
-          onPress={() => setShowForm((v) => !v)}
+          onPress={() => (formOpen ? closeForm() : setShowForm(true))}
           className="rounded-full bg-stone-900 px-4 py-2 dark:bg-stone-100"
         >
-          <Text className="font-semibold text-white dark:text-stone-900">{showForm ? 'Fermer' : '+ Ajouter'}</Text>
+          <Text className="font-semibold text-white dark:text-stone-900">{formOpen ? 'Fermer' : '+ Ajouter'}</Text>
         </Pressable>
       </View>
 
       <DateSelector period={period} onChange={shift} />
 
-      {showForm ? (
+      {formOpen ? (
         <View className="mb-3">
-          <TransactionForm onDone={() => setShowForm(false)} />
+          <TransactionForm key={editing?.id ?? 'new'} editing={editing ?? undefined} onDone={closeForm} />
         </View>
       ) : null}
 
@@ -58,7 +52,23 @@ export default function OperationsScreen() {
           data={data ?? []}
           keyExtractor={(t) => t.id}
           contentContainerClassName="gap-2 pb-10"
-          renderItem={({ item }) => <TransactionCard transaction={item} onLongPress={() => confirmDelete(item)} />}
+          renderItem={({ item }) => (
+            <TransactionCard
+              transaction={item}
+              onLongPress={() =>
+                confirmTransactionAction(item, {
+                  onEdit: () => {
+                    setShowForm(false);
+                    setEditing(item);
+                  },
+                  onDelete: () =>
+                    remove.mutate(item.id, {
+                      onError: (e: Error) => Alert.alert('Suppression impossible', e.message),
+                    }),
+                })
+              }
+            />
+          )}
           ListEmptyComponent={<Text className="mt-8 text-center text-stone-500">Aucune opération ce mois-ci.</Text>}
           refreshControl={<RefreshControl refreshing={isFetching && !isLoading} onRefresh={() => { void refetch(); }} />}
         />

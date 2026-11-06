@@ -24,12 +24,10 @@ export async function listTransactionsForMonth(period: YearMonth): Promise<Trans
   return (data ?? []) as TransactionWithRelations[];
 }
 
-export async function createTransaction(input: NewTransactionInput): Promise<void> {
-  const userId = await currentUserId();
+/** Champs écrits en base à partir de la saisie (un virement n'a ni catégorie ni compte crédité implicite). */
+function toRow(input: NewTransactionInput) {
   const isTransfer = input.type === 'transfer';
-
-  const { error } = await supabase.from('transactions').insert({
-    user_id: userId,
+  return {
     type: input.type,
     description: input.description.trim(),
     amount: input.amount,
@@ -38,8 +36,17 @@ export async function createTransaction(input: NewTransactionInput): Promise<voi
     source_account_id: input.source_account_id,
     destination_account_id: isTransfer ? input.destination_account_id : null,
     notes: input.notes ?? null,
-  });
+  };
+}
 
+export async function createTransaction(input: NewTransactionInput): Promise<void> {
+  const userId = await currentUserId();
+  const { error } = await supabase.from('transactions').insert({ user_id: userId, ...toRow(input) });
+  if (error) throw error;
+}
+
+export async function updateTransaction(id: string, input: NewTransactionInput): Promise<void> {
+  const { error } = await supabase.from('transactions').update(toRow(input)).eq('id', id);
   if (error) throw error;
 }
 
