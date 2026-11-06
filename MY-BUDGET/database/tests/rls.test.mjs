@@ -34,6 +34,7 @@ for (const f of [
   '/migrations/0001_schema.sql',
   '/migrations/0002_rls.sql',
   '/migrations/0003_triggers.sql',
+  '/migrations/0004_delete_account.sql',
   '/functions/finance_functions.sql',
 ]) {
   try {
@@ -177,6 +178,30 @@ ok('updated_at mis à jour au UPDATE', new Date(after).getTime() > new Date(befo
 await db.exec(`delete from auth.users where id = '${B}'`);
 const profAfter = await db.query(`select count(*)::int c from public.profiles where id = '${B}'`);
 ok('suppression auth.users → profil supprimé (cascade)', profAfter.rows[0].c === 0);
+
+// 10. Suppression de compte par l'utilisateur (RGPD)
+await db.exec('reset role');
+await db.query(`select set_config('request.jwt.claim.sub', '', false)`);
+await db.exec('set role anon');
+try {
+  await db.query('select public.delete_my_account()');
+  ok('anonyme ne peut pas supprimer de compte', false, '(aucune erreur levée)');
+} catch (e) {
+  ok('anonyme ne peut pas supprimer de compte', true, `→ ${e.message.slice(0, 80)}`);
+} finally {
+  await db.exec('reset role');
+}
+
+await asUser(A, `select public.delete_my_account()`);
+const left = await db.query(`
+  select
+    (select count(*) from auth.users where id = '${A}')::int as users,
+    (select count(*) from public.profiles where id = '${A}')::int as profiles,
+    (select count(*) from public.transactions where user_id = '${A}')::int as transactions,
+    (select count(*) from public.audit_logs where user_id = '${A}')::int as audit`);
+const l = left.rows[0];
+ok('delete_my_account supprime compte, profil, opérations et journal',
+  l.users === 0 && l.profiles === 0 && l.transactions === 0 && l.audit === 0, JSON.stringify(l));
 
 console.log(failures === 0 ? '\nTOUS LES TESTS PASSENT' : `\n${failures} ÉCHEC(S)`);
 process.exit(failures ? 1 : 0);

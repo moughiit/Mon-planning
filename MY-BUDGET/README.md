@@ -42,7 +42,8 @@ Dans le SQL Editor de ton projet Supabase, exécute **dans cet ordre** :
 1. `database/migrations/0001_schema.sql`
 2. `database/migrations/0002_rls.sql`
 3. `database/migrations/0003_triggers.sql`
-4. `database/functions/finance_functions.sql`
+4. `database/migrations/0004_delete_account.sql`
+5. `database/functions/finance_functions.sql`
 
 Les fonctions utilisent `CREATE OR REPLACE` ; relancer le fichier est sans risque.
 Les index `NULLS NOT DISTINCT` demandent PostgreSQL 15+ (Supabase utilise une version plus récente).
@@ -56,6 +57,22 @@ npm start
 ```
 
 Seule la clé **anon** doit figurer dans l'app. La clé `service_role` ne doit jamais être embarquée.
+
+### 3. Tests
+
+```bash
+npm test          # tests unitaires (Jest) : montants, dates, calendrier, épargne
+npm run test:db   # tests SQL : migrations, RLS, contraintes, suppression de compte (PGlite)
+npm run typecheck
+```
+
+### 4. Build (EAS)
+
+Configuration dans `eas.json` (profils `development`, `preview`, `production`). Avant un build, remplace `fr.example.mybudget` dans `app.json` et renseigne les variables `EXPO_PUBLIC_SUPABASE_URL` et `EXPO_PUBLIC_SUPABASE_ANON_KEY` dans EAS (`eas env:create`, vérifie la commande actuelle avec `eas --help`).
+
+### 5. Conformité
+
+Le brouillon de politique de confidentialité est dans `docs/PRIVACY_POLICY.md`. **Il doit être validé par un juriste (RGPD) avant publication.** La suppression de compte est disponible dans Réglages.
 
 ### 3. Tests de la base
 

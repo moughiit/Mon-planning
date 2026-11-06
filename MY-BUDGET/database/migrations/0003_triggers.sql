@@ -79,6 +79,12 @@ security definer
 set search_path = ''
 as $$
 begin
+  -- Suppression en cascade lors de la suppression du compte : l'utilisateur n'existe plus,
+  -- donc on n'écrit pas de ligne d'audit (elle violerait la clé étrangère vers auth.users).
+  if tg_op = 'DELETE' and not exists (select 1 from auth.users where id = old.user_id) then
+    return old;
+  end if;
+
   insert into public.audit_logs (user_id, table_name, record_id, action, old_data, new_data)
   values (
     case when tg_op = 'DELETE' then old.user_id else new.user_id end,

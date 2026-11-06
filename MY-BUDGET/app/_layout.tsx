@@ -1,6 +1,6 @@
 import '../global.css';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -48,6 +48,19 @@ export default function RootLayout() {
         </AuthGate>
       </QueryClientProvider>
     </SafeAreaProvider>
+  );
+}
+
+/** Écran affiché par expo-router si une erreur de rendu n'est pas rattrapée plus bas. */
+export function ErrorBoundary({ error, retry }: { error: Error; retry: () => unknown }) {
+  return (
+    <View className="flex-1 items-center justify-center gap-4 bg-stone-100 p-6 dark:bg-zinc-950">
+      <Text className="text-xl font-bold text-stone-900 dark:text-stone-50">Une erreur est survenue</Text>
+      <Text className="text-center text-stone-500">{error.message}</Text>
+      <Pressable onPress={() => retry()} className="rounded-xl bg-stone-900 px-6 py-3 dark:bg-stone-100">
+        <Text className="font-semibold text-white dark:text-stone-900">Réessayer</Text>
+      </Pressable>
+    </View>
   );
 }
 

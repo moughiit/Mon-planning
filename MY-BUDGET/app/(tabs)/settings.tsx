@@ -38,6 +38,26 @@ export default function SettingsScreen() {
     ]);
   };
 
+  const deleteAccount = () => {
+    Alert.alert(
+      'Supprimer ton compte ?',
+      'Toutes tes données (comptes, opérations, dettes, objectifs, budgets) seront effacées définitivement. Cette action est irréversible.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer définitivement',
+          style: 'destructive',
+          onPress: async () => {
+            const { error } = await supabase.rpc('delete_my_account');
+            if (error) return Alert.alert('Suppression impossible', error.message);
+            await supabase.auth.signOut(); // la session n'est plus valide ; l'erreur éventuelle est sans objet
+            queryClient.clear();
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <ScrollView className="flex-1 bg-stone-100 dark:bg-zinc-950" contentContainerClassName="gap-5 p-4 pt-14">
       <Text className="text-2xl font-bold text-stone-900 dark:text-stone-50">Réglages</Text>
@@ -77,6 +97,10 @@ export default function SettingsScreen() {
 
       <Pressable onPress={signOut} className="items-center rounded-2xl bg-white py-4 dark:bg-zinc-900">
         <Text className="font-semibold text-red-700">Se déconnecter</Text>
+      </Pressable>
+
+      <Pressable onPress={deleteAccount} className="items-center rounded-2xl bg-white py-4 dark:bg-zinc-900">
+        <Text className="font-semibold text-red-700">Supprimer mon compte</Text>
       </Pressable>
     </ScrollView>
   );
