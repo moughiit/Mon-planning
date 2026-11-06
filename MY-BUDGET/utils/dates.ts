@@ -48,8 +48,3 @@ export function formatFrDate(iso: string): string {
   const [y, m, d] = iso.split('-');
   return `${d}/${m}/${y}`;
 }
-
-export function yearMonthOf(iso: string): YearMonth {
-  const [y, m] = iso.split('-').map(Number);
-  return { year: y, month: m };
-}
